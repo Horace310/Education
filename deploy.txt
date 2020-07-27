@@ -1,0 +1,4 @@
+公网临时访问路径http://114.115.142.58:12991
+
+域名:www.ikeshen.com
+前端部署路径：/ikeson/dist

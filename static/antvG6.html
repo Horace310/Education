@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>辐射树</title>
+    <style>
+      ::-webkit-scrollbar {
+        display: none;
+      }
+
+      html,
+      body {
+        overflow: hidden;
+        margin: 0;
+      }
+
+      .search {
+        width: 190px;
+        height: 60px;
+        position: relative;
+        display: inline-block;
+      }
+
+      .search input {
+        border-radius: 10px;
+        outline: none;
+        text-indent: 25px;
+        margin-top: 24px;
+        margin-left: 20px;
+        background-color: #eff3f5;
+        border: 0;
+        height: 22px;
+      }
+
+      .search img {
+        width: 24px;
+        height: 24px;
+        position: absolute;
+        right: 10px;
+        top: 24px;
+      }
+
+      .btn {
+        position: absolute;
+        right: 50px;
+        top: 20px;
+      }
+
+      .btn button {
+        border: 0;
+        outline: none;
+        color: #fff;
+        background-color: #ee573b;
+        border-radius: 15px;
+        height: 25px;
+        width: 90px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="search">
+      <input type="serch" placeholder="搜索作业码" />
+      <img src="../static/images/search.png" alt="" id="searchImg" />
+    </div>
+    <div class="btn">
+      <button id="knowNum">生成知识码</button>
+    </div>
+    <div id="mountNode" class="dl"></div>
+    <script>
+      /*Fixing iframe window.innerHeight 0 issue in Safari*/
+      document.body.clientHeight;
+    </script>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.1.1/build/g6.js"></script>
+    <script src="https://gw.alipayobjects.com/os/antv/assets/lib/jquery-3.2.1.min.js"></script>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.hierarchy-0.5.0/build/hierarchy.js"></script>
+    <script src="./js/watcher.js"></script>
+    <!-- <script type="text/javascript" src="js/pc.js"></script> -->
+    <script>
+      var type = [];
+      var datas = {};
+      var id = 0;
+      //搜索作业码
+      document.getElementById("searchImg").onclick = function() {
+        //  console.log(1111);
+      };
+      //生成作业码
+      document.getElementById("knowNum").onclick = function() {
+        //     console.log(222);
+      };
+      //数据源
+      function queryTestBookDetail(e) {
+        id = e;
+        $.ajax({
+          type: "POST",
+          url: "http://api.ikeshen.com/likework/queryTestBookDetail.do",
+          contentType: "application/x-www-form-urlencoded;charset=utf-8",
+          data: {
+            gradeId: e
+          },
+          dataType: "json",
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader(
+              "Authorization",
+              window.sessionStorage.getItem("token")
+            );
+          },
+          success: function(data) {
+            type = data.data;
+            var datass = {};
+            // 第一层的数据
+            if (type == null && type == "null" && type == " ") {
+              return;
+            } else {
+              type.forEach(item => {
+                item.ids = item.id;
+                item.id = item.label;
+                item.children = item.list;
+                if (item.children != null) {
+                  item.children.forEach(item2 => {
+                    item2.ids = item2.id;
+                    item2.id = item2.label;
+                    item2.children = item2.list;
+                    if (item2.children != null) {
+                      item2.children.forEach(item3 => {
+                        item3.ids = item3.id;
+                        item3.id = item3.label;
+                        item3.children = item3.list;
+                        if (item3.children != null) {
+                          item3.children.forEach(item4 => {
+                            item4ids = item4.id;
+                            item4.id = item4.label;
+                            item4.children = item4.list;
+                          });
+                        }
+                      });
+                    }
+                  });
+                }
+              });
+              datass.id = "总纲";
+              datass.children = type;
+              datas = datass;
+            }
+            if (data.code == "5000") {
+              getG6();
+            }
+          },
+          error: function(e) {}
+        });
+        //判断 如果值改变了就刷新
+        let a = new Proxy(
+          {},
+          {
+            set: function(obj, prop, value) {
+              // obj[prop] = value;
+              if (prop === "zhihu") {
+                $("#mountNode").load(location.href + " #mountNode");
+              } else if (prop !== "zhihu") {
+                $("#mountNode").load(location.href + " #mountNode");
+              }
+              return true;
+            }
+          }
+        );
+        a.zhihu = id;
+      }
+      //修改节点
+      function amend(id, ids, name) {
+        $.ajax({
+          type: "POST",
+          url: "http://api.ikeshen.com/likework/updateBookDetail.do",
+          contentType: "application/x-www-form-urlencoded;charset=utf-8",
+          data: {
+            gradeId: id,
+            changeId: ids,
+            changeName: name,
+            flag: 3
+          },
+          dataType: "json",
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader(
+              "Authorization",
+              window.sessionStorage.getItem("token")
+            );
+          },
+          success: function(data) {
+            alert("修改成功");
+            console.log(data);
+          }
+        });
+      }
+      //渲染方法
+      function getG6(data) {
+        data = datas;
+        var graph = new G6.TreeGraph({
+          container: "mountNode",
+          width: window.innerWidth,
+          height: window.innerHeight,
+          pixelRatio: 2,
+          linkCenter: true,
+          modes: {
+            default: [
+              {
+                type: "collapse-expand",
+                onChange: function onChange(item, collapsed) {
+                  var data = item.get("model").data;
+                  data.collapsed = collapsed;
+                  return true;
+                }
+              },
+              "drag-canvas",
+              "zoom-canvas"
+            ]
+          },
+          defaultNode: {
+            size: 14,
+            style: {
+              fill: "#40a9ff",
+              stroke: "#096dd9"
+            }
+          },
+          defaultEdge: {
+            style: {
+              stroke: "#A3B1BF"
+            }
+          },
+          layout: function layout(data) {
+            var result = Hierarchy.dendrogram(data, {
+              direction: "LR", // H / V / LR / RL / TB / BT
+              nodeSep: 40,
+              rankSep: 150
+            });
+            G6.Util.radialLayout(result);
+            return result;
+          }
+        });
+        //修改章节
+        graph.on("dblclick", node => {
+          // console.log(node.item._cfg.model.ids, 111);
+          //   var ids = node._cfg.item.model.ids
+          console.log(node.item._cfg.model.ids);
+
+          var node_name = prompt("请输入节点名");
+          if (node_name) {
+            $.ajax({
+              type: "POST",
+              url: "http://api.ikeshen.com/likework/updateBookDetail.do",
+              contentType: "application/x-www-form-urlencoded;charset=utf-8",
+              data: {
+                gradeId: id,
+                changeId: node.item._cfg.model.ids,
+                changeName: node_name,
+                flag: 3
+              },
+              dataType: "json",
+              beforeSend: function(xhr) {
+                xhr.setRequestHeader(
+                  "Authorization",
+                  window.sessionStorage.getItem("token")
+                );
+              },
+              success: function(data) {
+                alert("修改成功");
+                console.log(data);
+              }
+            });
+          }
+        });
+        graph.node(function(node) {
+          return {
+            size: 14,
+            style: {
+              fill: "#ccc",
+              stroke: "#aaa"
+            },
+            label: node.id
+          };
+        });
+
+        graph.data(data);
+        graph.render();
+        graph.fitView();
+      }
+    </script>
+  </body>
+</html>

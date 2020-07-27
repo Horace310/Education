@@ -1,0 +1,90 @@
+import Vue from 'vue'
+import Vuex from 'vuex'
+Vue.use(Vuex);
+
+const state = {
+  isShow:0,
+  adminleftnavnum:"/",  //教师端头部导航
+  worknav:"/",//教师端作业中心左边导航
+  resnav:'',//教师端资源工具头部导航
+  suject:{},//学科
+  notnav:'',//教师端通知导航
+  calssnav:'',//教师端班级管理导航
+  cirnav:'',//教师端学科圈导航
+  cgnav:'',//教师端研究成果
+  myhownav:'',//学生我的作业左边导航
+  stuadminnav:"/",  //学生端头部导航
+  stuworknav:"",  //学生端作业中心导航
+  stuhonor:"",  //学生端荣耀体系
+  versions:"",
+  grade:"",
+  username:'',
+  usermobile:'',
+  ID:'',
+  chapterId:'',
+  barId:'',
+  contentId:'',
+  VideoUrl:'',
+  VideoName:'',
+  VideoCreateTime:'',
+  //学科id
+  subjectId:0,
+  //微信名
+  wxusername:'',
+  //作业码
+  homeworkCode:'',
+  //传入思维导图id
+  textId:0,
+  //传入思维导图的名字
+  textName:{},
+};
+const mutations = {
+  querySubject:(state,subjects)=>{
+    state.suject = subjects
+  },
+  bookVersions:(state,value)=>{
+    state.grade = value
+  },
+  userInfor(state,n){
+  //  console.log(state);
+  //  console.log(n);
+    state.username = n.username;
+    state.usermobile = n.mobile;
+  },
+
+  getID(state,id){
+    state.ID = id
+  },
+  getchapterId(state,id){
+    state.chapterId = id;
+  },
+  getbarId(state,id){
+    state.barId = id;
+  },
+  getcontentId(state,id){
+    state.contentId = id;
+  },
+  getVideo(state,id){
+    state.VideoUrl = id.VideoUrl,state.VideoName=id.VideoName,state.VideoCreateTime = id.VideoCreateTime
+  },
+  // getTextName(state,textname){
+  //   return state.textName = sessionStorage.getItem('text')
+  // }
+};
+const actions = {};
+
+// getters 只会依赖 state 中的成员去更新
+const getters = {
+  subjectList: (state) => {return  state.suject } ,
+  grades:(state) => {return  state.grade},
+//  getTextName:(state) =>{ return state.textName}
+};
+
+//注册Store
+const store = new Vuex.Store({
+  actions,
+  mutations,
+  state,
+  getters
+});
+export { store }

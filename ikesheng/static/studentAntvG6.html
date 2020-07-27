@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <script src="https://cdn.bootcss.com/echarts/3.7.2/echarts.min.js"></script>
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+  </head>
+  <body>
+    <div id="main" style="width: 600px;height:400px;">xxxxx</div>
+    <script type="text/javascript">
+      var type = [];
+      var datas = {};
+      var id = 1;
+      function queryTestBookDetail(e) {
+        id = e;
+        $.ajax({
+          type: "POST",
+          url: "http://api.ikeshen.com/likework/queryTestBookDetail.do",
+          contentType: "application/x-www-form-urlencoded;charset=utf-8",
+          data: {
+            gradeId: e
+          },
+          dataType: "json",
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader(
+              "Authorization",
+              window.sessionStorage.getItem("token")
+            );
+          },
+          success: function(data) {
+            type = data.data;
+            var datass = {};
+            // 第一层的数据
+            if (type == null && type == "null" && type == " ") {
+              return;
+            } else {
+              type.forEach(item => {
+                item.ids = item.id;
+                item.id = item.label;
+                item.children = item.list;
+                if (item.children != null) {
+                  item.children.forEach(item2 => {
+                    item2.ids = item2.id;
+                    item2.id = item2.label;
+                    item2.children = item2.list;
+                    if (item2.children != null) {
+                      item2.children.forEach(item3 => {
+                        item3.ids = item3.id;
+                        item3.id = item3.label;
+                        item3.children = item3.list;
+                        if (item3.children != null) {
+                          item3.children.forEach(item4 => {
+                            item4ids = item4.id;
+                            item4.id = item4.label;
+                            item4.children = item4.list;
+                          });
+                        }
+                      });
+                    }
+                  });
+                }
+              });
+              datass.id = "总纲";
+              datass.children = type;
+              datas = datass;
+            }
+            if (data.code == "5000") {
+              getInt(datass);
+            }
+          },
+          error: function(e) {}
+        });
+        //判断 如果值改变了就刷新
+        let a = new Proxy(
+          {},
+          {
+            set: function(obj, prop, value) {
+              // obj[prop] = value;
+              if (prop === "zhihu") {
+                $("#mountNode").load(location.href + " #mountNode");
+              } else if (prop !== "zhihu") {
+                $("#mountNode").load(location.href + " #mountNode");
+              }
+              return true;
+            }
+          }
+        );
+        a.zhihu = id;
+      }
+
+      var myChart = echarts.init(document.getElementById("main"));
+      myChart.showLoading();
+    </script>
+  </body>
+</html>
